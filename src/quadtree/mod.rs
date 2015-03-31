@@ -1,32 +1,33 @@
 use std::num::{Float, NumCast};
-use std::fmt::Show;
+use std::ops::Div;
+use std::fmt::Display;
 pub use self::volume::Volume;
 
 mod volume;
 
 /// The default capacity of a quadtree's node until it's subdivided.
-static DEFAULT_CAPACITY: uint = 8;
+static DEFAULT_CAPACITY: usize = 8;
 
 /// A trait that must be implemented by types that are going to be
 /// inserted into a `Quadtree`.
-pub trait Index<T: Float + Show> {
+pub trait Index<T: Float + Display> {
     /// This method returns the position for `self` in 2D-space. The
     /// return format should be in order of `[x, y]`.
-    fn quadtree_index(&self) -> [T, ..2];
+    fn quadtree_index(&self) -> [T; 2];
 }
 
-pub struct Quadtree<T: Float + Show, P: Index<T> + Clone> {
+pub struct Quadtree<T: Float + Display, P: Index<T> + Clone> {
     /// Maximum number of items to store before subdivision.
-    capacity: uint,
+    capacity: usize,
     /// Items in this quadtree node.
     items: Vec<P>,
     /// Bounding volume of this node.
     volume: Volume<T>,
     /// The four quadrants of this node, in order of NW, NE, SW, SE.
-    quadrants: Option<[Box<Quadtree<T, P>>, ..4]>
+    quadrants: Option<[Box<Quadtree<T, P>>; 4]>
 }
 
-impl<T: Float + Show, P: Index<T> + Clone> Quadtree<T, P> {
+impl<T: Float + Display, P: Index<T> + Clone> Quadtree<T, P> {
     /// Constructs a new, empty `Quadtree` with bounding volume `vol`
     /// and default node capacity of `DEFAULT_CAPACITY`.
     #[inline]
@@ -41,7 +42,7 @@ impl<T: Float + Show, P: Index<T> + Clone> Quadtree<T, P> {
 
     /// Creates an empty quadtree with volume `vol` and `capacity`.
     #[inline]
-    pub fn with_capacity(vol: Volume<T>, capacity: uint) -> Quadtree<T, P> {
+    pub fn with_capacity(vol: Volume<T>, capacity: usize) -> Quadtree<T, P> {
         Quadtree {
             capacity: capacity,
             items: Vec::with_capacity(capacity),
@@ -52,7 +53,7 @@ impl<T: Float + Show, P: Index<T> + Clone> Quadtree<T, P> {
 
     /// Returns the number of items in the tree.
     #[inline]
-    pub fn len(&self) -> uint {
+    pub fn len(&self) -> usize {
         let mut len = self.items.len();
         match self.quadrants {
             Some(ref quadrants) => for ref node in quadrants.iter() {
@@ -135,6 +136,6 @@ impl<T: Float + Show, P: Index<T> + Clone> Quadtree<T, P> {
 }
 
 #[inline]
-fn half<T: Float + Show>(n: T) -> T {
-    n.div(&NumCast::from(2u).unwrap())
+fn half<T: Float + Display>(n: T) -> T {
+    n.div(NumCast::from(2).unwrap())
 }

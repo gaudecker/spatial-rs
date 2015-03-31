@@ -2,7 +2,7 @@ extern crate spatial;
 
 use spatial::octree::{Octree, Index, Volume};
 
-#[deriving(Clone)]
+#[derive(Clone)]
 struct Object {
     x: f32,
     y: f32,
@@ -20,7 +20,7 @@ impl Object {
 }
 
 impl Index<f32> for Object {
-    fn octree_index(&self) -> [f32, ..3] {
+    fn octree_index(&self) -> [f32; 3] {
         [self.x, self.y, self.z]
     }
 }

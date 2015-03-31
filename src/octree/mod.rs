@@ -1,33 +1,33 @@
 use std::num::{Float, NumCast};
-use std::fmt::Show;
+use std::fmt::Display;
 pub use self::volume::Volume;
 
 mod volume;
 
 /// The default capacity of an octree's node until it's subdivided.
-static DEFAULT_CAPACITY: uint = 8;
+static DEFAULT_CAPACITY: usize = 8;
 
 /// A trait that must be implemented by types that are going to be
 /// inserted into an `Octree`.
-pub trait Index<T: Float + Show> {
+pub trait Index<T: Float + Display> {
     /// This method returns the position for `self` in 3D-space. The
     /// return format should be in order of `[x, y, z]`.
-    fn octree_index(&self) -> [T, ..3];
+    fn octree_index(&self) -> [T; 3];
 }
 
-pub struct Octree<T: Float + Show, I: Index<T> + Clone> {
+pub struct Octree<T: Float + Display, I: Index<T> + Clone> {
     /// Maximum number of items to store before subdivision.
-    capacity: uint,
+    capacity: usize,
     /// Items in the node.
     items: Vec<I>,
     /// Bounding volume of the node.
     volume: Volume<T>,
     /// The octants of the node, in order of NW, NE, SW, SE, starting
     /// from the upper half.
-    octants: Option<[Box<Octree<T, I>>, ..8]>
+    octants: Option<[Box<Octree<T, I>>; 8]>
 }
 
-impl<T: Float + Show, I: Index<T> + Clone> Octree<T, I> {
+impl<T: Float + Display, I: Index<T> + Clone> Octree<T, I> {
     /// Constructs a new, empty `Octree` with bounding volume `vol`
     /// and default node capacity of `DEFAULT_CAPACITY`.
     #[inline]
@@ -42,7 +42,7 @@ impl<T: Float + Show, I: Index<T> + Clone> Octree<T, I> {
 
     /// Creates an empty `Octree` with volume `vol` and `capacity`.
     #[inline]
-    pub fn with_capacity(vol: Volume<T>, capacity: uint) -> Octree<T, I> {
+    pub fn with_capacity(vol: Volume<T>, capacity: usize) -> Octree<T, I> {
         Octree {
             capacity: capacity,
             items: Vec::with_capacity(capacity),
@@ -53,7 +53,7 @@ impl<T: Float + Show, I: Index<T> + Clone> Octree<T, I> {
 
     /// Returns the number of items in the tree.
     #[inline]
-    pub fn len(&self) -> uint {
+    pub fn len(&self) -> usize {
         let mut len = self.items.len();
         match self.octants {
             Some(ref octants) => for ref node in octants.iter() {
@@ -142,6 +142,6 @@ impl<T: Float + Show, I: Index<T> + Clone> Octree<T, I> {
 }
 
 #[inline]
-fn half<T: Float + Show>(n: T) -> T {
-    n.div(&NumCast::from(2u).unwrap())
+fn half<T: Float + Display>(n: T) -> T {
+    n.div(NumCast::from(2).unwrap())
 }

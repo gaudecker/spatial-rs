@@ -26,13 +26,13 @@
 //! }
 //!
 //! impl quadtree::Index<f32> for Monster {
-//!     fn quadtree_index(&self) -> [f32, ..2] {
+//!     fn quadtree_index(&self) -> [f32; 2] {
 //!         [self.x, self.y]
 //!     }
 //! }
 //!
 //! impl octree::Index<f32> for Monster {
-//!     fn octree_index(&self) -> [f32, ..3] {
+//!     fn octree_index(&self) -> [f32; 3] {
 //!         [self.x, self.y, self.z]
 //!     }
 //! }
@@ -41,8 +41,10 @@
 //! The `Index`-traits are everything needed to start populating the
 //! trees.
 
-#[experimental]
-#[unstable]
+//#[unstable]
+#![feature(box_syntax)]
+#![feature(collections)]
+#![feature(core)]
 
 pub use quadtree::Quadtree;
 pub use octree::Octree;

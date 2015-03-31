@@ -2,7 +2,7 @@ extern crate spatial;
 
 use spatial::quadtree::{Quadtree, Index, Volume};
 
-#[deriving(Clone)]
+#[derive(Clone)]
 struct Object {
     x: f32,
     y: f32
@@ -18,7 +18,7 @@ impl Object {
 }
 
 impl Index<f32> for Object {
-    fn quadtree_index(&self) -> [f32, ..2] {
+    fn quadtree_index(&self) -> [f32; 2] {
         [self.x, self.y]
     }
 }
