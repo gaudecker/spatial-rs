@@ -21,7 +21,7 @@ struct Object {
 }
 
 impl Index<f32> for Object {
-    fn quadtree_index(&self) -> [f32, ..2] {
+    fn quadtree_index(&self) -> [f32; 2] {
         [self.x, self.y]
     }
 }
