@@ -1,5 +1,7 @@
-use SpatialKey;
 pub use self::volume::Volume;
+use SpatialKey;
+use num::NumCast;
+use num::traits::Float;
 
 mod volume;
 
@@ -115,14 +117,44 @@ impl<T: SpatialKey, I: Index<T> + Clone> Octree<T, I> {
             None => items
         }
     }
-
+    
+    #[inline]
+    pub fn get_in_radius<'a>(&'a self, center: [T; 3] , radius: T) -> Vec<&'a I> {
+        let min = [center[0] - radius, center[1] - radius, center[2] - radius];
+        let max = [center[0] + radius, center[1] + radius, center[2] + radius];
+        
+        let volume = Volume::new(min, max);
+        let mut in_box = self.get_in_volume( &volume );
+        
+        let mut in_sphere = Vec::new();
+        
+        let val2 : T = NumCast::from(2).unwrap();
+       
+        for item in in_box.drain() {
+        	let index = item.octree_index();
+        	let d0 = (index[0] - center[0]).powf(val2);
+        	let d1 = (index[1] - center[1]).powf(val2);
+        	let d2 = (index[2] - center[2]).powf(val2);
+        	
+        	let distance = (d0 + d1 + d2).sqrt();
+        	
+        	if distance < radius  {
+        		in_sphere.push( item );
+        	}
+        }
+        
+        return in_sphere;
+    }
+    
     /// Creates eight equal sized subtrees for this node.
     #[inline]
     fn subdivide(&mut self) {
         let cap = self.capacity;
         let min = self.volume.min;
         let max = self.volume.max;
-        let (hw, hh, hd) = (max[0].div2(), max[1].div2(), max[2].div2());
+        
+        let val2 = NumCast::from(2).unwrap();
+        let (hw, hh, hd) = (max[0].div(val2), max[1].div(val2), max[2].div(val2));
         
         self.octants = Some([
             // upper

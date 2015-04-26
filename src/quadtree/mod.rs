@@ -1,5 +1,6 @@
-use SpatialKey;
 pub use self::volume::Volume;
+use SpatialKey;
+use num::NumCast;
 
 mod volume;
 
@@ -117,12 +118,49 @@ impl<T: SpatialKey, P: Index<T> + Clone> Quadtree<T, P> {
         }
     }
     
+    #[inline]
+    pub fn get_in_radius<'a>(&'a self, center: [T; 2] , radius: T) -> Vec<&'a P> {
+        let min = [center[0] - radius, center[1] - radius];
+        let max = [center[0] + radius, center[1] + radius];
+        
+        println!("Got bounding box between {}.{} and {}.{}", 
+        		min[0], min[1], max[0], max[1] );
+        
+        let volume = Volume::new(min, max);
+        let mut in_box = self.get_in_volume( &volume );
+        println!("Got {} in box", in_box.len() );
+        let mut in_sphere = Vec::new();
+        
+        let val2 : T = NumCast::from(2).unwrap();
+        
+        for item in in_box.drain() {
+        	let index = item.quadtree_index();
+        	let d0 = (index[0] - center[0]).powf(val2);
+        	let d1 = (index[1] - center[1]).powf(val2);
+        	
+        	let distance : T = (d0 + d1).sqrt();
+        	
+        	
+        	println!("Got distance {} between {}.{} and {}.{}", distance,
+        		index[0], index[1], center[0], center[1] );
+        	if distance <= radius  {
+        		println!( "Including {}.{}", index[0], index[1] );
+        		in_sphere.push( item );
+        	}
+        }
+        
+        return in_sphere;
+    }
+    
     /// Creates four equal sized subtrees for this node.
     #[inline]
     fn subdivide(&mut self) {
         let min = self.volume.min;
         let max = self.volume.max;
-        let (hw, hh) = (max[0].div2(), max[1].div2());
+        
+        let val2 = NumCast::from(2).unwrap();
+        
+        let (hw, hh) = (max[0].div(val2), max[1].div(val2));
         
         self.quadrants = Some([
             box Quadtree::with_capacity(Volume::new([min[0], min[1]], [hw, hh]), self.capacity),

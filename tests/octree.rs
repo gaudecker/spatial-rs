@@ -49,5 +49,9 @@ fn octree_insert_query() {
     assert_eq!(tree.get_in_volume(&Volume::new([0.0, 0.5, 0.5], [0.5, 1.0, 1.0])).len(), 1);
     assert_eq!(tree.get_in_volume(&Volume::new([0.5, 0.5, 0.5], [1.0, 1.0, 1.0])).len(), 1);
     
+    assert_eq!(tree.get_in_radius([0.5, 0.5, 0.5], 0f32).len(), 0);
+    assert_eq!(tree.get_in_radius([0.25, 0.25, 0.25], 0.25).len(), 1);
+    assert_eq!(tree.get_in_radius([0.5, 0.5, 0.5], 0.5).len(), 8);
+    
     assert_eq!(tree.len(), 8);
 }

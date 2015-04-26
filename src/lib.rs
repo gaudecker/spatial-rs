@@ -53,23 +53,25 @@ pub mod quadtree;
 pub mod octree;
 
 extern crate core;
-use core::num::Float;
+extern crate num;
+use num::traits::Float;
+use num::NumCast;
 use core::ops::Add;
+use core::ops::Sub;
+use core::ops::Mul;
 use core::ops::Div;
 use std::fmt::Display;
 
-pub trait SpatialKey : Float + Display + PartialOrd + Add<Self, Output=Self> + Div<Self, Output=Self> + Copy {
-	fn div2(&self) -> Self;
-}
+pub trait SpatialKey : Float 
+		+ Display 
+		+ PartialOrd 
+		+ Add<Self, Output=Self> 
+		+ Sub<Self, Output=Self> 
+		+ Mul<Self, Output=Self> 
+		+ Div<Self, Output=Self> 
+		+ NumCast
+		+ Copy {}
 
-impl SpatialKey for f32 {
-	fn div2(&self) -> f32 {
-		self/2f32
-	}
-}
+impl SpatialKey for f32 {}
 
-impl SpatialKey for f64 {
-	fn div2(&self) -> f64 {
-		self/2f64
-	}
-}
+impl SpatialKey for f64 {}
