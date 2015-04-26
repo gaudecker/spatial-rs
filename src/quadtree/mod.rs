@@ -1,6 +1,4 @@
-use std::num::{Float, NumCast};
-use std::ops::Div;
-use std::fmt::Display;
+use SpatialKey;
 pub use self::volume::Volume;
 
 mod volume;
@@ -10,13 +8,13 @@ static DEFAULT_CAPACITY: usize = 8;
 
 /// A trait that must be implemented by types that are going to be
 /// inserted into a `Quadtree`.
-pub trait Index<T: Float + Display> {
+pub trait Index<T: SpatialKey> {
     /// This method returns the position for `self` in 2D-space. The
     /// return format should be in order of `[x, y]`.
     fn quadtree_index(&self) -> [T; 2];
 }
 
-pub struct Quadtree<T: Float + Display, P: Index<T> + Clone> {
+pub struct Quadtree<T: SpatialKey, P: Index<T> + Clone> {
     /// Maximum number of items to store before subdivision.
     capacity: usize,
     /// Items in this quadtree node.
@@ -27,7 +25,7 @@ pub struct Quadtree<T: Float + Display, P: Index<T> + Clone> {
     quadrants: Option<[Box<Quadtree<T, P>>; 4]>
 }
 
-impl<T: Float + Display, P: Index<T> + Clone> Quadtree<T, P> {
+impl<T: SpatialKey, P: Index<T> + Clone> Quadtree<T, P> {
     /// Constructs a new, empty `Quadtree` with bounding volume `vol`
     /// and default node capacity of `DEFAULT_CAPACITY`.
     #[inline]
@@ -124,7 +122,7 @@ impl<T: Float + Display, P: Index<T> + Clone> Quadtree<T, P> {
     fn subdivide(&mut self) {
         let min = self.volume.min;
         let max = self.volume.max;
-        let (hw, hh) = (half(max[0]), half(max[1]));
+        let (hw, hh) = (max[0].div2(), max[1].div2());
         
         self.quadrants = Some([
             box Quadtree::with_capacity(Volume::new([min[0], min[1]], [hw, hh]), self.capacity),
@@ -133,9 +131,4 @@ impl<T: Float + Display, P: Index<T> + Clone> Quadtree<T, P> {
             box Quadtree::with_capacity(Volume::new([min[0] + hw, min[1] + hh], [max[0], max[1]]), self.capacity)
                 ]);
     }
-}
-
-#[inline]
-fn half<T: Float + Display>(n: T) -> T {
-    n.div(NumCast::from(2).unwrap())
 }

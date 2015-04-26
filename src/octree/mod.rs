@@ -1,5 +1,4 @@
-use std::num::{Float, NumCast};
-use std::fmt::Display;
+use SpatialKey;
 pub use self::volume::Volume;
 
 mod volume;
@@ -9,13 +8,13 @@ static DEFAULT_CAPACITY: usize = 8;
 
 /// A trait that must be implemented by types that are going to be
 /// inserted into an `Octree`.
-pub trait Index<T: Float + Display> {
+pub trait Index<T: SpatialKey> {
     /// This method returns the position for `self` in 3D-space. The
     /// return format should be in order of `[x, y, z]`.
     fn octree_index(&self) -> [T; 3];
 }
 
-pub struct Octree<T: Float + Display, I: Index<T> + Clone> {
+pub struct Octree<T: SpatialKey, I: Index<T> + Clone> {
     /// Maximum number of items to store before subdivision.
     capacity: usize,
     /// Items in the node.
@@ -27,7 +26,7 @@ pub struct Octree<T: Float + Display, I: Index<T> + Clone> {
     octants: Option<[Box<Octree<T, I>>; 8]>
 }
 
-impl<T: Float + Display, I: Index<T> + Clone> Octree<T, I> {
+impl<T: SpatialKey, I: Index<T> + Clone> Octree<T, I> {
     /// Constructs a new, empty `Octree` with bounding volume `vol`
     /// and default node capacity of `DEFAULT_CAPACITY`.
     #[inline]
@@ -72,7 +71,6 @@ impl<T: Float + Display, I: Index<T> + Clone> Octree<T, I> {
             return false;
         }
         
-        // Insert item it there's room.
         if self.items.len() < self.capacity {
             self.items.push(item.clone());
             return true;
@@ -124,7 +122,7 @@ impl<T: Float + Display, I: Index<T> + Clone> Octree<T, I> {
         let cap = self.capacity;
         let min = self.volume.min;
         let max = self.volume.max;
-        let (hw, hh, hd) = (half(max[0]), half(max[1]), half(max[2]));
+        let (hw, hh, hd) = (max[0].div2(), max[1].div2(), max[2].div2());
         
         self.octants = Some([
             // upper
@@ -139,9 +137,4 @@ impl<T: Float + Display, I: Index<T> + Clone> Octree<T, I> {
             box Octree::with_capacity(Volume::new([min[0] + hw, min[1] + hh, hd], [max[0], max[1], max[2]]), cap)
                 ]);
     }
-}
-
-#[inline]
-fn half<T: Float + Display>(n: T) -> T {
-    n.div(NumCast::from(2).unwrap())
 }

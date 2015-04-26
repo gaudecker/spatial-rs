@@ -45,9 +45,31 @@
 #![feature(box_syntax)]
 #![feature(collections)]
 #![feature(core)]
+#![feature(convert)]
 
 pub use quadtree::Quadtree;
 pub use octree::Octree;
-
 pub mod quadtree;
 pub mod octree;
+
+extern crate core;
+use core::num::Float;
+use core::ops::Add;
+use core::ops::Div;
+use std::fmt::Display;
+
+pub trait SpatialKey : Float + Display + PartialOrd + Add<Self, Output=Self> + Div<Self, Output=Self> + Copy {
+	fn div2(&self) -> Self;
+}
+
+impl SpatialKey for f32 {
+	fn div2(&self) -> f32 {
+		self/2f32
+	}
+}
+
+impl SpatialKey for f64 {
+	fn div2(&self) -> f64 {
+		self/2f64
+	}
+}
