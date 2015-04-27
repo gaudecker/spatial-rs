@@ -3,3 +3,6 @@
 name = "spatial"
 version = "0.0.1"
 authors = ["Eeli Reilin <eeli@fea.st>"]
+
+[dependencies]
+num = "0.1.24"

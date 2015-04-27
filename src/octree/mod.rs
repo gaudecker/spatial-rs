@@ -1,6 +1,7 @@
-use std::num::{Float, NumCast};
-use std::fmt::Display;
 pub use self::volume::Volume;
+use SpatialKey;
+use num::NumCast;
+use num::traits::Float;
 
 mod volume;
 
@@ -9,13 +10,13 @@ static DEFAULT_CAPACITY: usize = 8;
 
 /// A trait that must be implemented by types that are going to be
 /// inserted into an `Octree`.
-pub trait Index<T: Float + Display> {
+pub trait Index<T: SpatialKey> {
     /// This method returns the position for `self` in 3D-space. The
     /// return format should be in order of `[x, y, z]`.
     fn octree_index(&self) -> [T; 3];
 }
 
-pub struct Octree<T: Float + Display, I: Index<T> + Clone> {
+pub struct Octree<T: SpatialKey, I: Index<T> + Clone> {
     /// Maximum number of items to store before subdivision.
     capacity: usize,
     /// Items in the node.
@@ -27,7 +28,7 @@ pub struct Octree<T: Float + Display, I: Index<T> + Clone> {
     octants: Option<[Box<Octree<T, I>>; 8]>
 }
 
-impl<T: Float + Display, I: Index<T> + Clone> Octree<T, I> {
+impl<T: SpatialKey, I: Index<T> + Clone> Octree<T, I> {
     /// Constructs a new, empty `Octree` with bounding volume `vol`
     /// and default node capacity of `DEFAULT_CAPACITY`.
     #[inline]
@@ -72,7 +73,6 @@ impl<T: Float + Display, I: Index<T> + Clone> Octree<T, I> {
             return false;
         }
         
-        // Insert item it there's room.
         if self.items.len() < self.capacity {
             self.items.push(item.clone());
             return true;
@@ -117,14 +117,44 @@ impl<T: Float + Display, I: Index<T> + Clone> Octree<T, I> {
             None => items
         }
     }
-
+    
+    #[inline]
+    pub fn get_in_radius<'a>(&'a self, center: [T; 3] , radius: T) -> Vec<&'a I> {
+        let min = [center[0] - radius, center[1] - radius, center[2] - radius];
+        let max = [center[0] + radius, center[1] + radius, center[2] + radius];
+        
+        let volume = Volume::new(min, max);
+        let mut in_box = self.get_in_volume( &volume );
+        
+        let mut in_sphere = Vec::new();
+        
+        let val2 : T = NumCast::from(2).unwrap();
+       
+        for item in in_box.drain() {
+        	let index = item.octree_index();
+        	let d0 = (index[0] - center[0]).powf(val2);
+        	let d1 = (index[1] - center[1]).powf(val2);
+        	let d2 = (index[2] - center[2]).powf(val2);
+        	
+        	let distance = (d0 + d1 + d2).sqrt();
+        	
+        	if distance < radius  {
+        		in_sphere.push( item );
+        	}
+        }
+        
+        return in_sphere;
+    }
+    
     /// Creates eight equal sized subtrees for this node.
     #[inline]
     fn subdivide(&mut self) {
         let cap = self.capacity;
         let min = self.volume.min;
         let max = self.volume.max;
-        let (hw, hh, hd) = (half(max[0]), half(max[1]), half(max[2]));
+        
+        let val2 = NumCast::from(2).unwrap();
+        let (hw, hh, hd) = (max[0].div(val2), max[1].div(val2), max[2].div(val2));
         
         self.octants = Some([
             // upper
@@ -139,9 +169,4 @@ impl<T: Float + Display, I: Index<T> + Clone> Octree<T, I> {
             box Octree::with_capacity(Volume::new([min[0] + hw, min[1] + hh, hd], [max[0], max[1], max[2]]), cap)
                 ]);
     }
-}
-
-#[inline]
-fn half<T: Float + Display>(n: T) -> T {
-    n.div(NumCast::from(2).unwrap())
 }
